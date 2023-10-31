@@ -1,0 +1,7 @@
+.Loading-Spinner {
+    transform: scale(3);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    margin-top: 40px;
+}
