@@ -15,6 +15,8 @@ class List extends Component {
       jokes: [],
       loading: true,
     };
+    this.upvote = this.upvote.bind(this);
+    this.downvote = this.downvote.bind(this);
   }
   componentDidMount() {
     axios
@@ -28,7 +30,10 @@ class List extends Component {
         },
       })
       .then((response) => {
-        console.log(response);
+        //console.log(response.data.results)
+        response.data.results.forEach((item) => {
+          return (item.score = 0);
+        });
         this.setState({
           jokes: response.data.results,
           loading: false,
@@ -39,15 +44,57 @@ class List extends Component {
       });
   }
 
+  upvote(jokeId) {
+
+    // console.log("this is jokeID", jokeId);
+    // let resultsID = this.state.jokes.filter((item) => {
+    //   if (item.id === jokeId) {
+    //     return item;
+    //   }
+    // });
+
+    let updatedResults = this.state.jokes.map((item) => {
+      if (jokeId === item.id) {
+        item.score = item.score + 1;
+      }
+      return item;
+    });
+
+    this.setState((st) => ({
+      jokes: st.jokes = updatedResults,
+    }));
+  }
+
+  downvote(jokeId) {
+    let updatedResults = this.state.jokes.map((item) => {
+      if (jokeId === item.id) {
+        item.score = item.score - 1;
+      }
+      return item;
+    });
+
+    this.setState((st) => ({
+      jokes: st.jokes = updatedResults,
+    }));
+  }
+
   render() {
-    console.log(localStorage)
     return (
       <div>
         {this.state.loading ? (
           <FontAwesomeIcon icon={faCircleNotch} size="lg" spin />
         ) : (
           this.state.jokes.map((item) => {
-            return <Joke jokes={item.joke} id={item.id} />;
+            return (
+              <Joke
+                key={item.id}
+                upvote={this.upvote}
+                downvote={this.downvote}
+                score={item.score}
+                jokes={item.joke}
+                id={item.id}
+              />
+            );
           })
         )}
       </div>
