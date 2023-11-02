@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import './Joke.css';
+import "./Joke.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUp, faArrowDown } from "@fortawesome/free-solid-svg-icons";
 
@@ -22,17 +22,15 @@ class Joke extends Component {
 
   render() {
     return (
-      <div>
-        <div>
-          <button>
-            <FontAwesomeIcon icon={faArrowUp} onClick={this.handleUpvote} />
-          </button>
-          <div>{this.props.score}</div>
-          <button>
-            <FontAwesomeIcon onClick={this.handleDownvote} icon={faArrowDown} />
-          </button>
-          <div>{this.props.jokes}</div>
-        </div>
+      <div className="Joke-list">
+        <button>
+          <FontAwesomeIcon icon={faArrowUp} onClick={this.handleUpvote} />
+        </button>
+        <div>{this.props.score}</div>
+        <button>
+          <FontAwesomeIcon onClick={this.handleDownvote} icon={faArrowDown} />
+        </button>
+        <div>{this.props.jokes}</div>
       </div>
     );
   }

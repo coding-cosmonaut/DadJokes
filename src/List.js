@@ -15,7 +15,7 @@ class List extends Component {
       jokes: [],
       loading: true,
       limit: 20,
-      currentPage: 1
+      currentPage: 1,
     };
     this.upvote = this.upvote.bind(this);
     this.downvote = this.downvote.bind(this);
@@ -49,28 +49,28 @@ class List extends Component {
   async handleClick() {
     if (this.state.limit < 30) {
       this.setState((st) => ({
-        limit: st.limit + 10
-      }))
+        limit: st.limit + 10,
+      }));
     } else if (this.state.limit === 30) {
       this.setState((st) => ({
-        limit: st.limit = 10,
-        currentPage: st.currentPage + 1
+        limit: (st.limit = 10),
+        currentPage: st.currentPage + 1,
       }));
-    } 
+    }
     let results = await axios.get(`${this.props.url}/search`, {
       headers: {
         Accept: "application/json",
       },
       params: {
         limit: this.state.limit,
-        page: this.state.currentPage
+        page: this.state.currentPage,
       },
     });
 
     results.data.results.forEach((item) => {
       return (item.score = 0);
     });
-    
+
     this.setState((st) => ({
       jokes: (st.jokes = results.data.results),
     }));
@@ -111,24 +111,31 @@ class List extends Component {
 
   render() {
     return (
-      <div>
-        {this.state.loading ? (
-          <FontAwesomeIcon icon={faCircleNotch} size="lg" spin />
-        ) : (
-          this.state.jokes.map((item) => {
-            return (
-              <Joke
-                key={item.id}
-                upvote={this.upvote}
-                downvote={this.downvote}
-                score={item.score}
-                jokes={item.joke}
-                id={item.id}
-              />
-            );
-          })
-        )}
-        <button onClick={this.handleClick}>New Jokes!</button>
+      <div className="List">
+        <div className="List-sidebar">
+          <h1 className="List-title">Dad Jokes!</h1>
+          <button className="JokeList-getmore" onClick={this.handleClick}>
+            New Jokes!
+          </button>
+        </div>
+        <div className="List-jokes">
+          {this.state.loading ? (
+            <FontAwesomeIcon icon={faCircleNotch} size="lg" spin />
+          ) : (
+            this.state.jokes.map((item) => {
+              return (
+                <Joke
+                  key={item.id}
+                  upvote={this.upvote}
+                  downvote={this.downvote}
+                  score={item.score}
+                  jokes={item.joke}
+                  id={item.id}
+                />
+              );
+            })
+          )}
+        </div>
       </div>
     );
   }
