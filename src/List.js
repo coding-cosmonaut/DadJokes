@@ -14,15 +14,17 @@ class List extends Component {
     this.state = {
       jokes: [],
       loading: true,
+      limit: 20,
+      currentPage: 1
     };
     this.upvote = this.upvote.bind(this);
     this.downvote = this.downvote.bind(this);
+    this.handleClick = this.handleClick.bind(this);
   }
   componentDidMount() {
     axios
       .get(`${this.props.url}/search`, {
         headers: {
-          "User-Agent": "Making a Dad-Joke Application",
           Accept: "application/json",
         },
         params: {
@@ -44,8 +46,37 @@ class List extends Component {
       });
   }
 
-  upvote(jokeId) {
+  async handleClick() {
+    if (this.state.limit < 30) {
+      this.setState((st) => ({
+        limit: st.limit + 10
+      }))
+    } else if (this.state.limit === 30) {
+      this.setState((st) => ({
+        limit: st.limit = 10,
+        currentPage: st.currentPage + 1
+      }));
+    } 
+    let results = await axios.get(`${this.props.url}/search`, {
+      headers: {
+        Accept: "application/json",
+      },
+      params: {
+        limit: this.state.limit,
+        page: this.state.currentPage
+      },
+    });
 
+    results.data.results.forEach((item) => {
+      return (item.score = 0);
+    });
+    
+    this.setState((st) => ({
+      jokes: (st.jokes = results.data.results),
+    }));
+  }
+
+  upvote(jokeId) {
     // console.log("this is jokeID", jokeId);
     // let resultsID = this.state.jokes.filter((item) => {
     //   if (item.id === jokeId) {
@@ -61,7 +92,7 @@ class List extends Component {
     });
 
     this.setState((st) => ({
-      jokes: st.jokes = updatedResults,
+      jokes: (st.jokes = updatedResults),
     }));
   }
 
@@ -74,7 +105,7 @@ class List extends Component {
     });
 
     this.setState((st) => ({
-      jokes: st.jokes = updatedResults,
+      jokes: (st.jokes = updatedResults),
     }));
   }
 
@@ -97,6 +128,7 @@ class List extends Component {
             );
           })
         )}
+        <button onClick={this.handleClick}>New Jokes!</button>
       </div>
     );
   }
