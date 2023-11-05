@@ -14,13 +14,13 @@ class List extends Component {
     this.state = {
       jokes: [],
       loading: true,
-      limit: 20,
+      limit: 30,
       currentPage: 1,
     };
-    this.upvote = this.upvote.bind(this);
-    this.downvote = this.downvote.bind(this);
+    this.handleVote = this.handleVote.bind(this);
     this.handleClick = this.handleClick.bind(this);
   }
+
   componentDidMount() {
     axios
       .get(`${this.props.url}/search`, {
@@ -47,16 +47,18 @@ class List extends Component {
   }
 
   async handleClick() {
-    if (this.state.limit < 30) {
-      this.setState((st) => ({
-        limit: st.limit + 10,
-      }));
-    } else if (this.state.limit === 30) {
-      this.setState((st) => ({
-        limit: (st.limit = 10),
-        currentPage: st.currentPage + 1,
-      }));
-    }
+    // if (this.state.limit < 30) {
+    //   this.setState((st) => ({
+    //     limit: st.limit + 10,
+    //   }));
+    // } else if (this.state.limit === 30) {
+    //   this.setState((st) => ({
+    //     limit: (st.limit = 10),
+    //     currentPage: st.currentPage + 1,
+    //   }));
+    // }
+
+//GET DAD JOKES
     let results = await axios.get(`${this.props.url}/search`, {
       headers: {
         Accept: "application/json",
@@ -67,39 +69,38 @@ class List extends Component {
       },
     });
 
-    results.data.results.forEach((item) => {
-      return (item.score = 0);
-    });
+    console.log(results.data.results.id, "FIRST")
+//ADD SCORE PROPERTY - CREATE JOKEID ARRAY AND PUSH IT TO LOCALSTORAGE
+    let jokeIds = [];
+    results.data.results.map((item) => {
+      jokeIds.push(item.id)
+      return item.score = 0;
+    })
+    localStorage.setItem("id", JSON.stringify(jokeIds));
+    let parsed = JSON.parse(localStorage.getItem("id"));
+    console.log(parsed)
+    
+    for (let i = 0; i < results.data.results.length; i++) {
+      if (!results.data.results[i].id === parsed[i]) {
+        
+      }
+    }
 
+//SET NEW STATE
     this.setState((st) => ({
       jokes: (st.jokes = results.data.results),
     }));
   }
 
-  upvote(jokeId) {
-    // console.log("this is jokeID", jokeId);
-    // let resultsID = this.state.jokes.filter((item) => {
-    //   if (item.id === jokeId) {
-    //     return item;
-    //   }
-    // });
-
+  handleVote(jokeId, event) {
+    let target = event.target.classList;
     let updatedResults = this.state.jokes.map((item) => {
       if (jokeId === item.id) {
-        item.score = item.score + 1;
-      }
-      return item;
-    });
-
-    this.setState((st) => ({
-      jokes: (st.jokes = updatedResults),
-    }));
-  }
-
-  downvote(jokeId) {
-    let updatedResults = this.state.jokes.map((item) => {
-      if (jokeId === item.id) {
-        item.score = item.score - 1;
+        if (target.contains("fa-arrow-up")) {
+          item.score = item.score + 1;
+        } else {
+          item.score = item.score - 1;
+        }
       }
       return item;
     });
@@ -126,8 +127,7 @@ class List extends Component {
               return (
                 <Joke
                   key={item.id}
-                  upvote={this.upvote}
-                  downvote={this.downvote}
+                  handleVote={this.handleVote}
                   score={item.score}
                   jokes={item.joke}
                   id={item.id}
