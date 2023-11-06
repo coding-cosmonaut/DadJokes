@@ -14,8 +14,8 @@ class List extends Component {
     this.state = {
       jokes: [],
       loading: true,
-      limit: 30,
-      currentPage: 1,
+      limit: 15,
+      currentPage: 2,
     };
     this.handleVote = this.handleVote.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -28,18 +28,20 @@ class List extends Component {
           Accept: "application/json",
         },
         params: {
-          limit: 10,
+          limit: 30,
         },
       })
       .then((response) => {
-        //console.log(response.data.results)
-        response.data.results.forEach((item) => {
-          return (item.score = 0);
-        });
+        let firstTenJokes = [];
+        for (let i = 0; i < 15; i++) {
+          response.data.results[i].score = 0;
+          firstTenJokes.push(response.data.results[i]);
+        }
         this.setState({
-          jokes: response.data.results,
+          jokes: firstTenJokes,
           loading: false,
         });
+        localStorage.setItem("id", JSON.stringify(response.data.results));
       })
       .catch((error) => {
         console.log(error);
@@ -47,51 +49,52 @@ class List extends Component {
   }
 
   async handleClick() {
-    // if (this.state.limit < 30) {
-    //   this.setState((st) => ({
-    //     limit: st.limit + 10,
-    //   }));
-    // } else if (this.state.limit === 30) {
-    //   this.setState((st) => ({
-    //     limit: (st.limit = 10),
-    //     currentPage: st.currentPage + 1,
-    //   }));
-    // }
+    let currStorage = JSON.parse(localStorage.getItem("id"));
+    if (this.state.limit < 30) {
+      let currJokes = this.state.jokes.map((item) => {
+        return item.id;
+      });
 
-//GET DAD JOKES
-    let results = await axios.get(`${this.props.url}/search`, {
-      headers: {
-        Accept: "application/json",
-      },
-      params: {
-        limit: this.state.limit,
-        page: this.state.currentPage,
-      },
-    });
-
-    console.log(results.data.results.id, "FIRST")
-//ADD SCORE PROPERTY - CREATE JOKEID ARRAY AND PUSH IT TO LOCALSTORAGE
-    let jokeIds = [];
-    results.data.results.map((item) => {
-      jokeIds.push(item.id)
-      return item.score = 0;
-    })
-    localStorage.setItem("id", JSON.stringify(jokeIds));
-    let parsed = JSON.parse(localStorage.getItem("id"));
-    console.log(parsed)
-    
-    for (let i = 0; i < results.data.results.length; i++) {
-      if (!results.data.results[i].id === parsed[i]) {
-        
+      let newJokes = [];
+      for (let i = 0; i < currStorage.length; i++) {
+        currStorage[i].score = 0;
+        if (currStorage[i].id !== currJokes[i]) {
+          newJokes.push(currStorage[i]);
+        }
       }
-    }
+      this.setState((st) => ({
+        limit: st.limit + 15,
+        jokes: newJokes,
+      }));
+    } else if (this.state.limit === 30) {
+      localStorage.clear();
+      let results = await axios.get(`${this.props.url}/search`, {
+        headers: {
+          Accept: "application/json",
+        },
+        params: {
+          limit: this.state.limit,
+          page: this.state.currentPage,
+        },
+      });
+      localStorage.setItem("id", JSON.stringify(results.data.results));
 
-//SET NEW STATE
-    this.setState((st) => ({
-      jokes: (st.jokes = results.data.results),
-    }));
+
+      let jokeIds = [];
+      for (let i = 0; i < 15; i++) {
+        results.data.results[i].score = 0;
+        jokeIds.push(results.data.results[i]);
+      }
+
+      this.setState((st) => ({
+        limit: (st.limit = 15),
+        currentPage: st.currentPage + 1,
+        jokes: st.jokes = jokeIds
+      }));
+    }
   }
 
+  //HANDLE UP/DOWN VOTES
   handleVote(jokeId, event) {
     let target = event.target.classList;
     let updatedResults = this.state.jokes.map((item) => {
