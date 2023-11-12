@@ -14,7 +14,7 @@ class List extends Component {
     this.state = {
       jokes: JSON.parse(window.localStorage.getItem("jokes") || "[]"),
       loading: true,
-      limit: 15,
+      limit: 10,
       currentPage: Math.floor(Math.random() * 25),
     };
     this.handleVote = this.handleVote.bind(this);
@@ -33,47 +33,77 @@ class List extends Component {
   }
 
   async getMoreJokes() {
-    if (this.state.limit === 30) {
-      let currStorage = JSON.parse(localStorage.getItem("jokes"));
-      let currJokes = this.state.jokes.map((item) => {
-        return item.id;
-      });
-      let newJokes = [...this.state.jokes];
-      currStorage.filter((item, i) => {
-        if (item.id === currJokes[i]) {
-          return;
-        } else {
-          return newJokes.push(item);
-        }
-      });
-
-      this.setState((st) => ({
-        limit: (st.limit = 15),
-        currentPage: st.currentPage + 1,
-        jokes: newJokes,
-      }));
-    } else {
-      let res = await axios.get(`${this.props.url}/search`, {
+    for (let i = 0; i < 10; i++) {
+      let res = await axios.get(`${this.props.url}`, {
         headers: {
           Accept: "application/json",
         },
-        params: {
-          limit: 30,
-          page: this.state.currentPage,
-        },
       });
+      let newObj = { ...res.data, score: 0 };
+      let newJokes = [...this.state.jokes, newObj];
+
       this.setState(
         (st) => ({
-          jokes: (st.jokes = res.data.results.map((item) => {
-            item.score = 0;
-            return item;
-          })).slice(0, this.state.limit),
+          jokes: (st.jokes = newJokes),
           loading: false,
-          limit: st.limit + 15,
+          limit: st.limit + 10,
         }),
-        () => localStorage.setItem("jokes", JSON.stringify(res.data.results))
+        () => window.localStorage.setItem("jokes", JSON.stringify(newJokes))
       );
     }
+
+    // this.setState(
+    //   (st) => ({
+    //     jokes: (st.jokes = res.data.results.map((item) => {
+    //       item.score = 0;
+    //       return item;
+    //     })),
+    //     loading: false,
+    //   }),
+    //   () => localStorage.setItem("jokes", JSON.stringify(res.data.results))
+    // );
+
+    // if (this.state.limit === 30) {
+    //   let currStorage = JSON.parse(localStorage.getItem("jokes"));
+    //   let currJokes = this.state.jokes.map((item) => {
+    //     return item.id;
+    //   });
+    //   let newJokes = [...this.state.jokes];
+    //   currStorage.filter((item, i) => {
+    //     if (item.id === currJokes[i]) {
+    //       return;
+    //     } else {
+    //       return newJokes.push(item);
+    //     }
+    //   });
+
+    //   this.setState((st) => ({
+    //     limit: (st.limit = 15),
+    //     currentPage: st.currentPage + 1,
+    //     jokes: newJokes,
+    //   }));
+    // } else {
+    //   let res = await axios.get(`${this.props.url}/search`, {
+    //     headers: {
+    //       Accept: "application/json",
+    //     },
+    //     params: {
+    //       limit: 30,
+    //       page: this.state.currentPage,
+    //     },
+    //   });
+    //   this.setState(
+    //     (st) => ({
+    //       jokes: (st.jokes = res.data.results.map((item) => {
+    //         item.score = 0;
+    //         return item;
+    //       })).slice(0, this.state.limit),
+    //       loading: false,
+    //       limit: st.limit + 15,
+    //     }),
+    //     () => localStorage.setItem("jokes", JSON.stringify(res.data.results))
+    //   );
+    // }
   }
 
   // async handleClick() {
@@ -155,9 +185,9 @@ class List extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    console.log('UPDATE')
-    console.log('preve',prevState.jokes)
-    console.log('current',this.state.jokes)
+    // console.log("UPDATE");
+    // console.log("preve", prevState.jokes);
+    // console.log("current", this.state.jokes);
     // if (previous.jokes.length > 0) {
     //   for (let i = 0; i < this.state.jokes.length; i++) {
     //     console.log(this.state.jokes[i].score);
