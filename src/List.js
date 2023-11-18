@@ -2,8 +2,6 @@ import React, { Component } from "react";
 import Joke from "./Joke";
 import axios from "axios";
 import "./List.css";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleNotch } from "@fortawesome/free-solid-svg-icons";
 
 class List extends Component {
   static defaultProps = {
@@ -13,14 +11,27 @@ class List extends Component {
     super(props);
     this.state = {
       jokes: JSON.parse(window.localStorage.getItem("jokes") || "[]"),
+      //JSON.parse(window.localStorage.getItem("jokes") || "[]")
       loading: true,
-      limit: 10,
-      currentPage: Math.floor(Math.random() * 25),
     };
+    this.oldJokes = new Set(
+      this.state.jokes.map((item) => {
+        return item.id;
+      })
+    );
+    console.log(this.oldJokes);
     this.handleVote = this.handleVote.bind(this);
-    //this.handleClick = this.handleClick.bind(this);
     this.getMoreJokes = this.getMoreJokes.bind(this);
+    //this.checkJokes = this.checkJokes.bind(this);
   }
+
+  // checkJokes() {
+  //   if (localStorage.getItem("jokes")) {
+  //     return JSON.parse(window.localStorage.getItem("jokes"));
+  //   } else {
+  //     return this.getMoreJokes();
+  //   }
+  // }
 
   componentDidMount() {
     if (this.state.jokes.length === 0) {
@@ -33,134 +44,44 @@ class List extends Component {
   }
 
   async getMoreJokes() {
-    for (let i = 0; i < 10; i++) {
+    console.log("FIRST PART", this.oldJokes);
+    if (!this.state.loading) {
+      this.setState({ loading: true });
+    }
+    let newJokes = [];
+    console.log("oldJOKEs", typeof this.oldJokes);
+    while (newJokes.length < 10) {
       let res = await axios.get(`${this.props.url}`, {
         headers: {
           Accept: "application/json",
         },
       });
-      let newObj = { ...res.data, score: 0 };
-      let newJokes = [...this.state.jokes, newObj];
-
-      this.setState(
-        (st) => ({
-          jokes: (st.jokes = newJokes),
-          loading: false,
-          limit: st.limit + 10,
-        }),
-        () => window.localStorage.setItem("jokes", JSON.stringify(newJokes))
-      );
+      console.log("before IF --", this.oldJokes);
+      if (!this.oldJokes.has(res.data.id)) {
+        newJokes.push({ ...res.data, score: 0 });
+      } else {
+        console.log("found duplicate", res.data.id);
+      }
     }
+    console.log("after LOOP", this.oldJokes);
 
-    // this.setState(
-    //   (st) => ({
-    //     jokes: (st.jokes = res.data.results.map((item) => {
-    //       item.score = 0;
-    //       return item;
-    //     })),
-    //     loading: false,
-    //   }),
-    //   () => localStorage.setItem("jokes", JSON.stringify(res.data.results))
-    // );
-
-    // if (this.state.limit === 30) {
-    //   let currStorage = JSON.parse(localStorage.getItem("jokes"));
-    //   let currJokes = this.state.jokes.map((item) => {
-    //     return item.id;
-    //   });
-    //   let newJokes = [...this.state.jokes];
-    //   currStorage.filter((item, i) => {
-    //     if (item.id === currJokes[i]) {
-    //       return;
-    //     } else {
-    //       return newJokes.push(item);
-    //     }
-    //   });
-
-    //   this.setState((st) => ({
-    //     limit: (st.limit = 15),
-    //     currentPage: st.currentPage + 1,
-    //     jokes: newJokes,
-    //   }));
-    // } else {
-    //   let res = await axios.get(`${this.props.url}/search`, {
-    //     headers: {
-    //       Accept: "application/json",
-    //     },
-    //     params: {
-    //       limit: 30,
-    //       page: this.state.currentPage,
-    //     },
-    //   });
-    //   this.setState(
-    //     (st) => ({
-    //       jokes: (st.jokes = res.data.results.map((item) => {
-    //         item.score = 0;
-    //         return item;
-    //       })).slice(0, this.state.limit),
-    //       loading: false,
-    //       limit: st.limit + 15,
-    //     }),
-    //     () => localStorage.setItem("jokes", JSON.stringify(res.data.results))
-    //   );
-    // }
+    this.setState(
+      (st) => ({
+        jokes: [...st.jokes, ...newJokes],
+        loading: false,
+      }),
+      () => {
+        window.localStorage.setItem("jokes", JSON.stringify(this.state.jokes));
+        this.oldJokes = new Set(
+          this.state.jokes.map((item) => {
+            return item.id;
+          })
+        );
+      }
+    );
+    window.location.reload()
+    console.log("AFTER SET STATE", this.oldJokes);
   }
-
-  // async handleClick() {
-  //   if (this.state.jokes.length > 15) {
-  //     this.setState((st) => {
-  //       limit: st.limit = 30;
-  //     });
-  //   }
-  //   let currStorage = JSON.parse(localStorage.getItem("jokes"));
-
-  //   if (this.state.limit < 30) {
-  //     let currJokes = this.state.jokes.map((item) => {
-  //       return item.id;
-  //     });
-
-  //     let newJokes = [...this.state.jokes];
-  //     currStorage.map((item, index) => {
-  //       if (item.id !== currJokes[index]) {
-  //         item.score = 0;
-  //         return newJokes.push(item);
-  //       }
-  //     });
-
-  //     this.setState((st) => ({
-  //       limit: st.limit + 15,
-  //       jokes: newJokes,
-  //       currentPage: st.currentPage + 1,
-  //     }));
-  //   } else if (this.state.limit === 30) {
-  //     let results = await axios.get(`${this.props.url}/search`, {
-  //       headers: {
-  //         Accept: "application/json",
-  //       },
-  //       params: {
-  //         limit: this.state.limit,
-  //         page: this.state.currentPage,
-  //       },
-  //     });
-  //     console.log(results);
-  //     //window.localStorage.setItem("newJokes", JSON.stringify(results.data.results));
-
-  //     this.setState(
-  //       (st) => ({
-  //         limit: (st.limit = 15),
-  //         currentPage: st.currentPage + 1,
-  //         jokes: (st.jokes = results.data.results
-  //           .slice(0, this.state.limit)
-  //           .map((item) => {
-  //             item.score = 0;
-  //             return item;
-  //           })),
-  //       }),
-  //       () =>
-  //         window.localStorage.setItem("jokes", JSON.stringify(this.state.jokes))
-  //     );
-  //   }
-  // }
 
   //HANDLE UP/DOWN VOTES
   handleVote(jokeId, event) {
@@ -171,9 +92,9 @@ class List extends Component {
         jokes: st.jokes.map((item) => {
           if (jokeId === item.id) {
             if (target.contains("fa-arrow-up")) {
-              item.score = item.score + 1;
+              item.score += 1;
             } else {
-              item.score = item.score - 1;
+              item.score -= 1;
             }
           }
           return item;
@@ -185,6 +106,7 @@ class List extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
+    console.log(prevState)
     // console.log("UPDATE");
     // console.log("preve", prevState.jokes);
     // console.log("current", this.state.jokes);
@@ -212,7 +134,13 @@ class List extends Component {
         </div>
         <div className="List-jokes">
           {this.state.loading ? (
-            <FontAwesomeIcon icon={faCircleNotch} size="lg" spin />
+            <div className="List-spinner-cont">
+              <i
+                className="fa-solid fa-circle-notch fa-spin fa-2xl List-spinner"
+                aria-hidden="true"
+              ></i>
+              <h1>New Jokes Incoming...</h1>
+            </div>
           ) : (
             this.state.jokes.map((item) => {
               return (
